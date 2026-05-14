@@ -2,6 +2,7 @@
     const STORAGE_KEY = "calculadora-materiais-state";
     const DEFAULT_TAB = "composition";
     const EMPTY_PROJECT_OPTION = '<option value="">Selecione um projeto</option>';
+    const SETTINGS_PANEL_OPEN_CLASS = "is-open";
 
     const state = loadState();
 
@@ -12,7 +13,7 @@
     });
 
     function loadState() {
-        const fallback = { projects: [], selectedProjectId: "" };
+        const fallback = { projects: [], materials: [], selectedProjectId: "" };
         const rawState = window.localStorage.getItem(STORAGE_KEY);
 
         if (!rawState) {
@@ -24,12 +25,14 @@
 
             if (Array.isArray(parsed.projects)) {
                 const projects = parsed.projects.map(normalizeProject).filter(Boolean);
+                const materials = collectGlobalMaterials(parsed);
                 const selectedProjectId = projects.some(function (project) {
                     return project.id === parsed.selectedProjectId;
                 }) ? parsed.selectedProjectId : (projects[0] ? projects[0].id : "");
 
                 return {
                     projects,
+                    materials,
                     selectedProjectId
                 };
             }
@@ -38,10 +41,10 @@
                 const migratedProjectId = createId("project");
 
                 return {
+                    materials: Array.isArray(parsed.materials) ? parsed.materials.map(normalizeMaterial).filter(Boolean) : [],
                     projects: [{
                         id: migratedProjectId,
                         name: "Projeto migrado",
-                        materials: Array.isArray(parsed.materials) ? parsed.materials.map(normalizeMaterial).filter(Boolean) : [],
                         pieces: Array.isArray(parsed.pieces) ? parsed.pieces.map(normalizePiece).filter(Boolean) : []
                     }],
                     selectedProjectId: migratedProjectId
@@ -50,6 +53,7 @@
 
             return {
                 projects: [],
+                materials: [],
                 selectedProjectId: ""
             };
         } catch (error) {
@@ -72,6 +76,38 @@
         $("#pieces-table-body").on("click", ".delete-piece", handleDeletePiece);
         $("#clear-data").on("click", handleClearData);
         $(".tab-button").on("click", handleTabChange);
+        $("#open-cost-settings").on("click", openCostSettings);
+        $("#close-cost-settings, #cost-settings-overlay").on("click", closeCostSettings);
+        $(document).on("keydown", handleGlobalKeydown);
+    }
+
+    function openCostSettings() {
+        const panel = $("#cost-settings-panel");
+        const overlay = $("#cost-settings-overlay");
+
+        panel.prop("hidden", false).attr("aria-hidden", "false").addClass(SETTINGS_PANEL_OPEN_CLASS);
+        overlay.prop("hidden", false).addClass(SETTINGS_PANEL_OPEN_CLASS);
+        $("#open-cost-settings").attr("aria-expanded", "true");
+        $("body").addClass("has-settings-open");
+        window.setTimeout(function () {
+            $("#material-name").trigger("focus");
+        }, 0);
+    }
+
+    function closeCostSettings() {
+        const panel = $("#cost-settings-panel");
+        const overlay = $("#cost-settings-overlay");
+
+        panel.removeClass(SETTINGS_PANEL_OPEN_CLASS).attr("aria-hidden", "true").prop("hidden", true);
+        overlay.removeClass(SETTINGS_PANEL_OPEN_CLASS).prop("hidden", true);
+        $("#open-cost-settings").attr("aria-expanded", "false").trigger("focus");
+        $("body").removeClass("has-settings-open");
+    }
+
+    function handleGlobalKeydown(event) {
+        if (event.key === "Escape" && $("body").hasClass("has-settings-open")) {
+            closeCostSettings();
+        }
     }
 
     function handleTabChange(event) {
@@ -93,7 +129,6 @@
         state.projects.push({
             id: projectId,
             name,
-            materials: [],
             pieces: []
         });
         state.selectedProjectId = projectId;
@@ -132,12 +167,6 @@
 
     function handleMaterialSubmit(event) {
         event.preventDefault();
-        const project = getSelectedProject();
-
-        if (!project) {
-            window.alert("Crie ou selecione um projeto antes de cadastrar materiais.");
-            return;
-        }
 
         const name = $("#material-name").val().trim();
         const price = Number($("#material-price").val());
@@ -147,7 +176,7 @@
             return;
         }
 
-        project.materials.push({
+        state.materials.push({
             id: createId("material"),
             name,
             price
@@ -167,7 +196,7 @@
             return;
         }
 
-        if (!project.materials.length) {
+        if (!state.materials.length) {
             window.alert("Cadastre ao menos um material antes de adicionar pecas.");
             return;
         }
@@ -194,10 +223,11 @@
     }
 
     function handleDeleteMaterial(event) {
-        const project = getSelectedProject();
         const materialId = $(event.currentTarget).data("id");
-        const pieceUsingMaterial = project && project.pieces.some(function (piece) {
-            return piece.materialId === materialId;
+        const pieceUsingMaterial = state.projects.some(function (project) {
+            return project.pieces.some(function (piece) {
+                return piece.materialId === materialId;
+            });
         });
 
         if (pieceUsingMaterial) {
@@ -205,11 +235,7 @@
             return;
         }
 
-        if (!project) {
-            return;
-        }
-
-        project.materials = project.materials.filter(function (material) {
+        state.materials = state.materials.filter(function (material) {
             return material.id !== materialId;
         });
         persistState();
@@ -239,11 +265,10 @@
             return;
         }
 
-        if (!window.confirm('Deseja remover todos os materiais e pecas do projeto "' + project.name + '"?')) {
+        if (!window.confirm('Deseja remover todas as pecas do projeto "' + project.name + '"? A base de custos sera mantida para todos os projetos.')) {
             return;
         }
 
-        project.materials = [];
         project.pieces = [];
         persistState();
         renderAll();
@@ -270,11 +295,14 @@
     }
 
     function setActiveTab(tabName) {
-        const nextTab = tabName || DEFAULT_TAB;
+        const requestedTab = tabName || DEFAULT_TAB;
+        const availableTab = $(".tab-button").filter(function () {
+            return $(this).data("tab-target") === requestedTab;
+        }).length ? requestedTab : DEFAULT_TAB;
 
         $(".tab-button").each(function () {
             const button = $(this);
-            const isActive = button.data("tab-target") === nextTab;
+            const isActive = button.data("tab-target") === availableTab;
 
             button.toggleClass("is-active", isActive);
             button.attr("aria-selected", String(isActive));
@@ -283,7 +311,7 @@
 
         $(".tab-panel").each(function () {
             const panel = $(this);
-            const isActive = panel.data("tab-panel") === nextTab;
+            const isActive = panel.data("tab-panel") === availableTab;
 
             panel.toggleClass("is-active", isActive);
             panel.prop("hidden", !isActive);
@@ -291,21 +319,15 @@
     }
 
     function renderMaterials() {
-        const project = getSelectedProject();
         const body = $("#materials-table-body");
         body.empty();
 
-        if (!project) {
-            body.append('<tr class="empty-state-row"><td colspan="3">Crie ou selecione um projeto para cadastrar materiais.</td></tr>');
-            return;
-        }
-
-        if (!project.materials.length) {
+        if (!state.materials.length) {
             body.append('<tr class="empty-state-row"><td colspan="3">Nenhum material cadastrado.</td></tr>');
             return;
         }
 
-        project.materials.forEach(function (material) {
+        state.materials.forEach(function (material) {
             body.append(
                 $("<tr>")
                     .append($("<td>").text(material.name))
@@ -336,7 +358,7 @@
             return;
         }
 
-        project.materials.forEach(function (material) {
+        state.materials.forEach(function (material) {
             select.append(
                 $("<option>")
                     .attr("value", material.id)
@@ -344,9 +366,9 @@
             );
         });
 
-        select.prop("disabled", project.materials.length === 0);
+        select.prop("disabled", state.materials.length === 0);
 
-        if (currentValue && project.materials.some(function (material) { return material.id === currentValue; })) {
+        if (currentValue && state.materials.some(function (material) { return material.id === currentValue; })) {
             select.val(currentValue);
         }
     }
@@ -401,7 +423,7 @@
         const breakdownRoot = $("#material-breakdown");
         const template = document.getElementById("breakdown-item-template");
 
-        $("#summary-material-count").text(project ? project.materials.length : 0);
+        $("#summary-material-count").text(state.materials.length);
         $("#summary-piece-count").text(project ? project.pieces.length : 0);
         $("#summary-total-cost").text(formatCurrency(totals.totalCost));
 
@@ -488,10 +510,9 @@
     }
 
     function calculatePieceMetrics(piece) {
-        const project = getSelectedProject();
-        const material = project ? project.materials.find(function (entry) {
+        const material = state.materials.find(function (entry) {
             return entry.id === piece.materialId;
-        }) : null;
+        }) || null;
         const areaPerPieceSqm = (piece.widthCm * piece.heightCm) / 10000;
         const totalAreaSqm = areaPerPieceSqm * piece.quantity;
         const totalCost = totalAreaSqm * (material ? material.price : 0);
@@ -536,9 +557,28 @@
         return {
             id: String(project.id),
             name: String(project.name),
-            materials: Array.isArray(project.materials) ? project.materials.map(normalizeMaterial).filter(Boolean) : [],
             pieces: Array.isArray(project.pieces) ? project.pieces.map(normalizePiece).filter(Boolean) : []
         };
+    }
+
+    function collectGlobalMaterials(parsed) {
+        const rawGlobalMaterials = Array.isArray(parsed.materials) ? parsed.materials : [];
+        const rawProjectMaterials = Array.isArray(parsed.projects) ? parsed.projects.flatMap(function (project) {
+            return Array.isArray(project.materials) ? project.materials : [];
+        }) : [];
+        const materialMap = new Map();
+
+        rawGlobalMaterials.concat(rawProjectMaterials).forEach(function (material) {
+            const normalizedMaterial = normalizeMaterial(material);
+
+            if (!normalizedMaterial || materialMap.has(normalizedMaterial.id)) {
+                return;
+            }
+
+            materialMap.set(normalizedMaterial.id, normalizedMaterial);
+        });
+
+        return Array.from(materialMap.values());
     }
 
     function normalizeMaterial(material) {
@@ -601,16 +641,21 @@
         const hasProject = Boolean(project);
         const projectName = hasProject ? project.name : "Nenhum projeto selecionado";
 
-        $("#project-helper").text(hasProject ? 'Projeto ativo: ' + project.name + '. Os cadastros e o consolidado abaixo pertencem somente a ele.' : "Crie um projeto para cadastrar os materiais, itens e gerar um consolidado separado.");
-        $("#material-form :input").prop("disabled", !hasProject);
+        $("#project-helper").text(hasProject ? 'Projeto ativo: ' + project.name + '. A base de custos e compartilhada entre todos os projetos; as pecas e o consolidado abaixo pertencem somente a ele.' : "Crie um projeto para cadastrar pecas e gerar um consolidado. A base de custos fica disponivel para todo o sistema.");
+        $("#material-form :input").prop("disabled", false);
         $("#piece-form :input").not("#piece-material").prop("disabled", !hasProject);
+        $("#piece-material").prop("disabled", !hasProject || state.materials.length === 0);
         $("#clear-data").prop("disabled", !hasProject);
 
-        ["#piece-project-badge", "#material-project-badge", "#summary-project-badge"].forEach(function (selector) {
+        ["#piece-project-badge", "#summary-project-badge"].forEach(function (selector) {
             $(selector)
                 .text(projectName)
                 .prop("hidden", !hasProject);
         });
+
+        $("#material-project-badge")
+            .text("Disponivel para todos os projetos")
+            .prop("hidden", false);
     }
 
     function resetForms() {
