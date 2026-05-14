@@ -126,6 +126,36 @@ select {
     gap: 24px;
 }
 
+.runtime-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(255, 252, 247, 0.88);
+    box-shadow: var(--shadow);
+}
+
+.runtime-notice strong {
+    color: var(--accent-strong);
+}
+
+.runtime-notice span {
+    color: var(--muted);
+}
+
+.runtime-notice.is-warning {
+    border-color: rgba(217, 143, 78, 0.34);
+    background: rgba(255, 248, 240, 0.96);
+}
+
+.runtime-notice.is-success {
+    border-color: rgba(30, 58, 95, 0.18);
+    background: rgba(244, 248, 252, 0.96);
+}
+
 .workspace-shell {
     display: grid;
     gap: 18px;
@@ -316,6 +346,19 @@ button:focus {
     transform: translateY(-1px);
 }
 
+button:disabled,
+input:disabled,
+select:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+}
+
+button:disabled:hover,
+input:disabled:hover,
+select:disabled:hover {
+    transform: none;
+}
+
 .table-wrap {
     overflow-x: auto;
 }
@@ -459,6 +502,10 @@ thead th {
     .panel,
     .hero-card {
         padding: 20px;
+    }
+
+    .runtime-notice {
+        flex-direction: column;
     }
 
     .panel-header {

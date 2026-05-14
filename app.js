@@ -3,6 +3,7 @@
     const DEFAULT_TAB = "composition";
     const EMPTY_PROJECT_OPTION = '<option value="">Selecione um projeto</option>';
     const SETTINGS_PANEL_OPEN_CLASS = "is-open";
+    const LOCAL_PROTOCOL = "file:";
 
     const state = loadState();
 
@@ -276,6 +277,7 @@
     }
 
     function renderAll() {
+        renderRuntimeNotice();
         renderTabs();
         renderProjects();
         renderProjectContext();
@@ -283,6 +285,46 @@
         renderMaterialSelect();
         renderPieces();
         renderSummary();
+    }
+
+    function renderRuntimeNotice() {
+        const notice = $("#runtime-notice");
+        const runtime = getRuntimeContext();
+
+        if (!runtime.message) {
+            notice.prop("hidden", true).removeClass("is-warning is-success").empty();
+            return;
+        }
+
+        notice
+            .prop("hidden", false)
+            .removeClass("is-warning is-success")
+            .addClass(runtime.tone === "success" ? "is-success" : "is-warning")
+            .html("<strong>" + escapeHtml(runtime.title) + "</strong><span>" + escapeHtml(runtime.message) + "</span>");
+    }
+
+    function getRuntimeContext() {
+        if (window.location.protocol === LOCAL_PROTOCOL) {
+            return {
+                tone: "warning",
+                title: "Modo arquivo local",
+                message: "Os dados seguem salvos no navegador, mas instalacao PWA e cache offline dependem de abrir a pasta por um servidor local."
+            };
+        }
+
+        if (!("serviceWorker" in navigator) || !window.isSecureContext) {
+            return {
+                tone: "warning",
+                title: "Modo navegador",
+                message: "A calculadora funciona normalmente, mas os recursos PWA dependem de um contexto seguro para ativar o service worker."
+            };
+        }
+
+        return {
+            tone: "success",
+            title: "PWA pronto",
+            message: "Persistencia local e recursos offline estao disponiveis neste ambiente."
+        };
     }
 
     function renderTabs() {
@@ -680,7 +722,7 @@
     }
 
     function registerServiceWorker() {
-        if (!("serviceWorker" in navigator)) {
+        if (!("serviceWorker" in navigator) || !window.isSecureContext || window.location.protocol === LOCAL_PROTOCOL) {
             return;
         }
 

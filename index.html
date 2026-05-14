@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1e3a5f">
     <meta name="description" content="Calculadora de materiais e custo por metro quadrado com persistencia local.">
-    <title>Calculadora de Materiais</title>
+    <title>MatCalc - Calculadora de Materiais</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="stylesheet" href="styles.css">
@@ -14,8 +14,8 @@
     <div class="page-shell">
         <header class="hero">
             <div>
-                <p class="eyebrow">PWA local</p>
-                <h1>Calculadora de materiais por m²</h1>
+                <p class="eyebrow">MatCalc</p>
+                <h1>Calculadora de materiais</h1>
                 <p class="hero-copy">Cadastre materiais, monte as pecas do projeto e acompanhe area total e custo final com persistencia no navegador.</p>
             </div>
             <div class="hero-card hero-card-summary">
@@ -41,6 +41,8 @@
                 </div>
             </div>
         </header>
+
+        <section id="runtime-notice" class="runtime-notice" hidden aria-live="polite"></section>
 
         <main class="layout">
             <section class="workspace-shell">

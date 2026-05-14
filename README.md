@@ -33,6 +33,8 @@ Foi criada uma aplicacao PWA local em HTML, CSS, JavaScript e jQuery com persist
 - Resumo por material com total de itens, area acumulada e custo.
 - Persistencia local dos dados no navegador.
 - Manifest e service worker para uso como PWA local.
+- Aviso visual de modo de execucao para diferenciar uso em arquivo local e ambiente PWA.
+- Estados visuais consistentes para campos e botoes desabilitados.
 
 ### Estrutura criada
 
@@ -55,3 +57,4 @@ Foi criada uma aplicacao PWA local em HTML, CSS, JavaScript e jQuery com persist
 - As medidas das pecas sao informadas em centimetros.
 - O calculo da area usa a formula `(largura_cm x altura_cm / 10000) x quantidade`.
 - O custo final considera o preco cadastrado por m² do material selecionado.
+- Ao abrir por `file:///`, a persistencia continua funcionando, mas instalacao PWA e cache offline exigem servidor local por restricao do navegador.
