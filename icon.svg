@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title>Calculadora de Materiais</title>
+  <rect width="256" height="256" rx="56" fill="#1e3a5f"/>
+  <path d="M56 72c0-8.837 7.163-16 16-16h112c8.837 0 16 7.163 16 16v112c0 8.837-7.163 16-16 16H72c-8.837 0-16-7.163-16-16V72Z" fill="#f7f3ed"/>
+  <path d="M76 88h104v26H76V88Zm0 42h26v26H76v-26Zm39 0h26v26h-26v-26Zm39 0h26v26h-26v-26Zm-78 39h26v26H76v-26Zm39 0h65v26h-65v-26Z" fill="#d98f4e"/>
+</svg>
