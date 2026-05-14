@@ -17,6 +17,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -230,6 +234,45 @@ select {
 .project-panel {
     display: grid;
     gap: 16px;
+}
+
+.project-picker-panel {
+    display: grid;
+    gap: 18px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255, 253, 250, 0.72);
+}
+
+.project-picker-section {
+    display: grid;
+    gap: 12px;
+}
+
+.project-picker-label {
+    margin: 0;
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.project-picker-divider {
+    height: 1px;
+    background: var(--line);
+}
+
+.project-create-form {
+    margin-bottom: 0;
+}
+
+.project-danger-zone {
+    display: grid;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
 }
 
 .panel-focus {

@@ -35,6 +35,9 @@ Foi criada uma aplicacao PWA local em HTML, CSS, JavaScript e jQuery com persist
 - Manifest e service worker para uso como PWA local.
 - Aviso visual de modo de execucao para diferenciar uso em arquivo local e ambiente PWA.
 - Estados visuais consistentes para campos e botoes desabilitados.
+- A composicao e o consolidado ficam ocultos ate existir um projeto selecionado.
+- A troca ou criacao de outro projeto acontece em um painel separado para evitar interrupcao acidental do preenchimento atual.
+- A exclusao do projeto fica dentro da area de composicao, junto de confirmacao, para reduzir risco de remocao acidental durante a troca de contexto.
 
 ### Estrutura criada
 

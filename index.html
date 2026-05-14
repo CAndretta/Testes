@@ -50,37 +50,48 @@
                     <div class="panel-header">
                         <div>
                             <p class="section-tag">Projetos</p>
-                            <h2>Abra um projeto antes de cadastrar</h2>
+                            <h2 id="project-heading">Abra um projeto antes de cadastrar</h2>
                         </div>
+                        <button type="button" id="toggle-project-picker" class="ghost-button" aria-controls="project-picker-panel" aria-expanded="true">
+                            Selecionar ou criar projeto
+                        </button>
                     </div>
 
-                    <form id="project-form" class="stack-form">
-                        <div class="field-grid two-columns aligned-end">
-                            <label>
-                                <span>Nome do projeto</span>
-                                <input type="text" id="project-name" maxlength="80" placeholder="Ex.: Reforma apto 302" required>
-                            </label>
-                            <div class="form-actions form-actions-start">
-                                <button type="submit" class="primary-button">Criar projeto</button>
+                    <div id="project-picker-panel" class="project-picker-panel">
+                        <div class="project-picker-section">
+                            <p class="project-picker-label">Projeto existente</p>
+                            <div class="field-grid project-toolbar">
+                                <label>
+                                    <span>Selecionar projeto</span>
+                                    <select id="project-select">
+                                        <option value="">Selecione um projeto</option>
+                                    </select>
+                                </label>
                             </div>
                         </div>
-                    </form>
 
-                    <div class="field-grid two-columns aligned-end project-toolbar">
-                        <label>
-                            <span>Projeto ativo</span>
-                            <select id="project-select" required>
-                                <option value="">Selecione um projeto</option>
-                            </select>
-                        </label>
-                        <div class="form-actions form-actions-start">
-                            <button type="button" id="delete-project" class="ghost-button danger">Excluir projeto</button>
+                        <div class="project-picker-divider" aria-hidden="true"></div>
+
+                        <div class="project-picker-section">
+                            <p class="project-picker-label">Novo projeto</p>
+                            <form id="project-form" class="stack-form project-create-form">
+                                <div class="field-grid two-columns aligned-end">
+                                    <label>
+                                        <span>Nome do projeto</span>
+                                        <input type="text" id="project-name" maxlength="80" placeholder="Ex.: Reforma apto 302" required>
+                                    </label>
+                                    <div class="form-actions form-actions-start">
+                                        <button type="submit" class="primary-button">Criar projeto</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
                     <p id="project-helper" class="helper-text">Crie um projeto para cadastrar os materiais, itens e gerar um consolidado separado.</p>
                 </section>
 
+                <div id="project-workspace" hidden>
                 <div class="tab-strip" role="tablist" aria-label="Areas do projeto">
                     <button type="button" class="tab-button is-active" id="tab-button-composition" data-tab-target="composition" role="tab" aria-selected="true" aria-controls="tab-panel-composition">
                         Composicao do projeto
@@ -150,6 +161,13 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <div class="project-danger-zone">
+                            <p class="helper-text">A exclusao remove o projeto atual e todas as pecas vinculadas a ele.</p>
+                            <div class="form-actions form-actions-start">
+                                <button type="button" id="delete-project" class="ghost-button danger">Excluir projeto</button>
+                            </div>
+                        </div>
                     </section>
                 </section>
 
@@ -187,6 +205,7 @@
                         </div>
                     </section>
                 </section>
+                </div>
             </section>
         </main>
     </div>

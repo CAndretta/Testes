@@ -4,6 +4,7 @@
     const EMPTY_PROJECT_OPTION = '<option value="">Selecione um projeto</option>';
     const SETTINGS_PANEL_OPEN_CLASS = "is-open";
     const LOCAL_PROTOCOL = "file:";
+    const uiState = { projectPickerOpen: false };
 
     const state = loadState();
 
@@ -27,9 +28,7 @@
             if (Array.isArray(parsed.projects)) {
                 const projects = parsed.projects.map(normalizeProject).filter(Boolean);
                 const materials = collectGlobalMaterials(parsed);
-                const selectedProjectId = projects.some(function (project) {
-                    return project.id === parsed.selectedProjectId;
-                }) ? parsed.selectedProjectId : (projects[0] ? projects[0].id : "");
+                const selectedProjectId = "";
 
                 return {
                     projects,
@@ -71,6 +70,7 @@
         $("#project-form").on("submit", handleProjectSubmit);
         $("#project-select").on("change", handleProjectChange);
         $("#delete-project").on("click", handleDeleteProject);
+        $("#toggle-project-picker").on("click", toggleProjectPicker);
         $("#material-form").on("submit", handleMaterialSubmit);
         $("#piece-form").on("submit", handlePieceSubmit);
         $("#materials-table-body").on("click", ".delete-material", handleDeleteMaterial);
@@ -133,6 +133,7 @@
             pieces: []
         });
         state.selectedProjectId = projectId;
+        uiState.projectPickerOpen = false;
 
         persistState();
         renderAll();
@@ -141,6 +142,10 @@
 
     function handleProjectChange(event) {
         state.selectedProjectId = $(event.currentTarget).val();
+        if (state.selectedProjectId) {
+            uiState.projectPickerOpen = false;
+            resetForms();
+        }
         persistState();
         renderAll();
     }
@@ -160,7 +165,8 @@
         state.projects = state.projects.filter(function (entry) {
             return entry.id !== project.id;
         });
-        state.selectedProjectId = state.projects[0] ? state.projects[0].id : "";
+        state.selectedProjectId = "";
+        uiState.projectPickerOpen = true;
         resetForms();
         persistState();
         renderAll();
@@ -328,6 +334,12 @@
     }
 
     function renderTabs() {
+        if (!getSelectedProject()) {
+            $(".tab-button").removeClass("is-active").attr("aria-selected", "false").attr("tabindex", "-1");
+            $(".tab-panel").removeClass("is-active").prop("hidden", true);
+            return;
+        }
+
         setActiveTab(getActiveTab());
     }
 
@@ -673,6 +685,8 @@
 
         if (currentValue && state.projects.some(function (project) { return project.id === currentValue; })) {
             select.val(currentValue);
+        } else {
+            select.val("");
         }
 
         $("#delete-project").prop("disabled", !state.selectedProjectId);
@@ -682,8 +696,15 @@
         const project = getSelectedProject();
         const hasProject = Boolean(project);
         const projectName = hasProject ? project.name : "Nenhum projeto selecionado";
+        const shouldShowPicker = uiState.projectPickerOpen;
 
-        $("#project-helper").text(hasProject ? 'Projeto ativo: ' + project.name + '. A base de custos e compartilhada entre todos os projetos; as pecas e o consolidado abaixo pertencem somente a ele.' : "Crie um projeto para cadastrar pecas e gerar um consolidado. A base de custos fica disponivel para todo o sistema.");
+        $("#project-heading").text(hasProject ? "Projeto em andamento" : "Abra um projeto antes de cadastrar");
+        $("#project-helper").text(hasProject ? 'Projeto ativo: ' + project.name + '. Use o botao acima para trocar de contexto sem misturar o preenchimento atual.' : "Selecione um projeto existente ou crie um novo para liberar o preenchimento das pecas e do consolidado.");
+        $("#toggle-project-picker")
+            .text(hasProject ? "Trocar ou criar outro projeto" : "Selecionar ou criar projeto")
+            .attr("aria-expanded", String(shouldShowPicker));
+        $("#project-picker-panel").prop("hidden", !shouldShowPicker);
+        $("#project-workspace").prop("hidden", !hasProject);
         $("#material-form :input").prop("disabled", false);
         $("#piece-form :input").not("#piece-material").prop("disabled", !hasProject);
         $("#piece-material").prop("disabled", !hasProject || state.materials.length === 0);
@@ -698,6 +719,30 @@
         $("#material-project-badge")
             .text("Disponivel para todos os projetos")
             .prop("hidden", false);
+    }
+
+    function toggleProjectPicker() {
+        uiState.projectPickerOpen = !uiState.projectPickerOpen;
+
+        if (uiState.projectPickerOpen) {
+            openProjectPicker();
+            return;
+        }
+
+        renderProjectContext();
+    }
+
+    function openProjectPicker() {
+        uiState.projectPickerOpen = true;
+        renderProjectContext();
+        window.setTimeout(function () {
+            if (state.projects.length) {
+                $("#project-select").trigger("focus");
+                return;
+            }
+
+            $("#project-name").trigger("focus");
+        }, 0);
     }
 
     function resetForms() {
