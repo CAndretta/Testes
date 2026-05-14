@@ -160,6 +160,11 @@ select {
     padding: 24px;
 }
 
+.project-panel {
+    display: grid;
+    gap: 16px;
+}
+
 .panel-focus {
     border-color: rgba(30, 58, 95, 0.16);
     box-shadow: 0 24px 70px rgba(18, 37, 61, 0.18);
@@ -231,6 +236,14 @@ button:focus {
     justify-content: flex-end;
 }
 
+.form-actions-start {
+    justify-content: flex-start;
+}
+
+.project-toolbar {
+    margin-top: -4px;
+}
+
 .primary-button,
 .ghost-button,
 .table-action {
@@ -290,6 +303,20 @@ thead th {
 .empty-state-row td,
 .empty-breakdown {
     color: var(--muted);
+}
+
+.helper-text {
+    margin: 0;
+    color: var(--muted);
+}
+
+.project-badge {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
 .panel-summary {

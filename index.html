@@ -39,6 +39,41 @@
 
         <main class="layout">
             <section class="workspace-shell">
+                <section class="panel project-panel">
+                    <div class="panel-header">
+                        <div>
+                            <p class="section-tag">Projetos</p>
+                            <h2>Abra um projeto antes de cadastrar</h2>
+                        </div>
+                    </div>
+
+                    <form id="project-form" class="stack-form">
+                        <div class="field-grid two-columns aligned-end">
+                            <label>
+                                <span>Nome do projeto</span>
+                                <input type="text" id="project-name" maxlength="80" placeholder="Ex.: Reforma apto 302" required>
+                            </label>
+                            <div class="form-actions form-actions-start">
+                                <button type="submit" class="primary-button">Criar projeto</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="field-grid two-columns aligned-end project-toolbar">
+                        <label>
+                            <span>Projeto ativo</span>
+                            <select id="project-select" required>
+                                <option value="">Selecione um projeto</option>
+                            </select>
+                        </label>
+                        <div class="form-actions form-actions-start">
+                            <button type="button" id="delete-project" class="ghost-button danger">Excluir projeto</button>
+                        </div>
+                    </div>
+
+                    <p id="project-helper" class="helper-text">Crie um projeto para cadastrar os materiais, itens e gerar um consolidado separado.</p>
+                </section>
+
                 <div class="tab-strip" role="tablist" aria-label="Areas do projeto">
                     <button type="button" class="tab-button is-active" id="tab-button-composition" data-tab-target="composition" role="tab" aria-selected="true" aria-controls="tab-panel-composition">
                         Composicao do projeto
@@ -58,6 +93,7 @@
                                 <p class="section-tag">Composicao do projeto</p>
                                 <h2>Pecas e quantidades</h2>
                             </div>
+                            <span id="piece-project-badge" class="project-badge" hidden></span>
                         </div>
 
                         <form id="piece-form" class="stack-form">
@@ -120,6 +156,7 @@
                                 <p class="section-tag">Base de custos</p>
                                 <h2>Materiais</h2>
                             </div>
+                            <span id="material-project-badge" class="project-badge" hidden></span>
                         </div>
 
                         <form id="material-form" class="stack-form">
@@ -164,6 +201,7 @@
                                 <p class="section-tag">Consolidado</p>
                                 <h2>Resumo do projeto</h2>
                             </div>
+                            <span id="summary-project-badge" class="project-badge" hidden></span>
                             <button type="button" id="clear-data" class="ghost-button">Limpar dados</button>
                         </div>
 
