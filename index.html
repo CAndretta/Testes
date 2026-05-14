@@ -13,10 +13,14 @@
 <body>
     <div class="page-shell">
         <header class="hero">
-            <div>
+            <div class="hero-copy-block">
                 <p class="eyebrow">MatCalc</p>
                 <h1>Calculadora de materiais</h1>
                 <p class="hero-copy">Cadastre materiais, monte as pecas do projeto e acompanhe area total e custo final com persistencia no navegador.</p>
+                <div class="hero-actions">
+                    <button type="button" id="hero-start-action" class="primary-button">Comecar projeto</button>
+                    <button type="button" id="hero-material-action" class="ghost-button">Base de custos</button>
+                </div>
             </div>
             <div class="hero-card hero-card-summary">
                 <div class="hero-card-topbar">
@@ -46,6 +50,45 @@
 
         <main class="layout">
             <section class="workspace-shell">
+                <section class="progress-strip panel" aria-labelledby="progress-title">
+                    <div class="panel-header panel-header-compact">
+                        <div>
+                            <p class="section-tag">Fluxo guiado</p>
+                            <h2 id="progress-title">Preencha em quatro etapas</h2>
+                        </div>
+                    </div>
+                    <div id="journey-steps" class="journey-steps" aria-live="polite">
+                        <article class="journey-step" data-step="project">
+                            <span>1</span>
+                            <div>
+                                <strong>Projeto</strong>
+                                <small>Escolha o contexto de trabalho</small>
+                            </div>
+                        </article>
+                        <article class="journey-step" data-step="materials">
+                            <span>2</span>
+                            <div>
+                                <strong>Materiais</strong>
+                                <small>Cadastre a base de custo</small>
+                            </div>
+                        </article>
+                        <article class="journey-step" data-step="pieces">
+                            <span>3</span>
+                            <div>
+                                <strong>Pecas</strong>
+                                <small>Informe medidas e quantidades</small>
+                            </div>
+                        </article>
+                        <article class="journey-step" data-step="summary">
+                            <span>4</span>
+                            <div>
+                                <strong>Resumo</strong>
+                                <small>Revise area, custo e consolidado</small>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
                 <section class="panel project-panel">
                     <div class="panel-header">
                         <div>
@@ -91,7 +134,7 @@
                     <p id="project-helper" class="helper-text">Crie um projeto para cadastrar os materiais, itens e gerar um consolidado separado.</p>
                 </section>
 
-                <div id="project-workspace" hidden>
+                <div id="project-workspace" class="project-workspace" hidden>
                 <div class="tab-strip" role="tablist" aria-label="Areas do projeto">
                     <button type="button" class="tab-button is-active" id="tab-button-composition" data-tab-target="composition" role="tab" aria-selected="true" aria-controls="tab-panel-composition">
                         Composicao do projeto
@@ -112,6 +155,7 @@
                         </div>
 
                         <form id="piece-form" class="stack-form">
+                            <div id="piece-form-message" class="form-message" hidden aria-live="polite"></div>
                             <div class="field-grid three-columns">
                                 <label>
                                     <span>Descricao da peca</span>
@@ -138,12 +182,22 @@
                                     </select>
                                 </label>
                             </div>
+                            <div class="inline-support">
+                                <button type="button" id="quick-add-material" class="ghost-button">Cadastrar material agora</button>
+                                <p id="piece-form-helper" class="helper-text">Informe dimensoes e quantidade para ver a estimativa antes de salvar.</p>
+                            </div>
+                            <div id="piece-estimate" class="estimate-card" aria-live="polite">
+                                <strong>Previa da peca</strong>
+                                <p>Preencha os campos para visualizar area e custo estimado.</p>
+                            </div>
                             <div class="form-actions">
                                 <button type="submit" class="primary-button">Adicionar peca</button>
                             </div>
                         </form>
 
-                        <div class="table-wrap">
+                        <div id="pieces-mobile-list" class="mobile-card-list" hidden aria-live="polite"></div>
+
+                        <div class="table-wrap desktop-table-wrap">
                             <table>
                                 <thead>
                                     <tr>
@@ -233,6 +287,7 @@
             </div>
 
             <form id="material-form" class="stack-form">
+                <div id="material-form-message" class="form-message" hidden aria-live="polite"></div>
                 <div class="field-grid two-columns">
                     <label>
                         <span>Nome do material</span>
@@ -248,7 +303,9 @@
                 </div>
             </form>
 
-            <div class="table-wrap">
+            <div id="materials-mobile-list" class="mobile-card-list" hidden aria-live="polite"></div>
+
+            <div class="table-wrap desktop-table-wrap">
                 <table>
                     <thead>
                         <tr>
@@ -276,6 +333,19 @@
             <strong class="breakdown-cost"></strong>
         </article>
     </template>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="confirm-overlay" class="confirm-overlay" hidden></div>
+    <section id="confirm-dialog" class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-copy" hidden>
+        <p class="section-tag">Confirmacao</p>
+        <h2 id="confirm-title">Confirmar acao</h2>
+        <p id="confirm-copy">Revise a acao antes de continuar.</p>
+        <div class="confirm-actions">
+            <button type="button" id="confirm-cancel" class="ghost-button">Cancelar</button>
+            <button type="button" id="confirm-accept" class="primary-button danger-button">Confirmar</button>
+        </div>
+    </section>
 
     <script src="jquery-3.7.1.min.js"></script>
     <script src="app.js"></script>

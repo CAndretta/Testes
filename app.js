@@ -4,9 +4,14 @@
     const EMPTY_PROJECT_OPTION = '<option value="">Selecione um projeto</option>';
     const SETTINGS_PANEL_OPEN_CLASS = "is-open";
     const LOCAL_PROTOCOL = "file:";
-    const uiState = { projectPickerOpen: false };
+    const TOAST_DURATION_MS = 3200;
 
     const state = loadState();
+    const uiState = {
+        projectPickerOpen: !state.selectedProjectId,
+        confirmResolver: null,
+        toastTimer: 0
+    };
 
     $(function () {
         bindEvents();
@@ -71,15 +76,26 @@
         $("#project-select").on("change", handleProjectChange);
         $("#delete-project").on("click", handleDeleteProject);
         $("#toggle-project-picker").on("click", toggleProjectPicker);
+        $("#hero-start-action").on("click", handleHeroStartAction);
+        $("#hero-material-action, #quick-add-material").on("click", openCostSettings);
         $("#material-form").on("submit", handleMaterialSubmit);
         $("#piece-form").on("submit", handlePieceSubmit);
-        $("#materials-table-body").on("click", ".delete-material", handleDeleteMaterial);
-        $("#pieces-table-body").on("click", ".delete-piece", handleDeletePiece);
+        $("#materials-table-body, #materials-mobile-list").on("click", ".delete-material", handleDeleteMaterial);
+        $("#pieces-table-body, #pieces-mobile-list").on("click", ".delete-piece", handleDeletePiece);
         $("#clear-data").on("click", handleClearData);
         $(".tab-button").on("click", handleTabChange);
         $("#open-cost-settings").on("click", openCostSettings);
         $("#close-cost-settings, #cost-settings-overlay").on("click", closeCostSettings);
+        $("#confirm-cancel, #confirm-overlay").on("click", handleConfirmCancel);
+        $("#confirm-accept").on("click", handleConfirmAccept);
+        $("#piece-form").on("input change", "input, select", renderPieceEstimate);
+        $("#material-form").on("input change", "input", handleMaterialInput);
         $(document).on("keydown", handleGlobalKeydown);
+    }
+
+    function handleHeroStartAction() {
+        openProjectPicker();
+        scrollToElement("#project-heading");
     }
 
     function openCostSettings() {
@@ -106,13 +122,27 @@
     }
 
     function handleGlobalKeydown(event) {
+        if (uiState.confirmResolver && event.key === "Escape") {
+            resolveConfirmation(false);
+            return;
+        }
+
         if (event.key === "Escape" && $("body").hasClass("has-settings-open")) {
             closeCostSettings();
         }
     }
 
+    function handleConfirmCancel() {
+        resolveConfirmation(false);
+    }
+
+    function handleConfirmAccept() {
+        resolveConfirmation(true);
+    }
+
     function handleTabChange(event) {
         setActiveTab($(event.currentTarget).data("tab-target"));
+        renderJourneySteps();
     }
 
     function handleProjectSubmit(event) {
@@ -121,7 +151,8 @@
         const name = $("#project-name").val().trim();
 
         if (!name) {
-            window.alert("Informe um nome valido para o projeto.");
+            showToast("Informe um nome valido para o projeto.", "warning");
+            $("#project-name").trigger("focus");
             return;
         }
 
@@ -138,27 +169,37 @@
         persistState();
         renderAll();
         event.currentTarget.reset();
+        showToast('Projeto "' + name + '" criado.', "success");
+        setActiveTab("composition");
     }
 
     function handleProjectChange(event) {
         state.selectedProjectId = $(event.currentTarget).val();
+
         if (state.selectedProjectId) {
             uiState.projectPickerOpen = false;
             resetForms();
+            showToast("Projeto carregado para edicao.", "success");
         }
+
         persistState();
         renderAll();
     }
 
-    function handleDeleteProject() {
+    async function handleDeleteProject() {
         const project = getSelectedProject();
 
         if (!project) {
-            window.alert("Selecione um projeto para excluir.");
+            showToast("Selecione um projeto para excluir.", "warning");
             return;
         }
 
-        if (!window.confirm('Deseja excluir o projeto "' + project.name + '" e todos os itens vinculados a ele?')) {
+        if (!(await requestConfirmation({
+            title: "Excluir projeto",
+            copy: 'Deseja excluir o projeto "' + project.name + '" e todos os itens vinculados a ele?',
+            confirmLabel: "Excluir projeto",
+            tone: "danger"
+        }))) {
             return;
         }
 
@@ -170,6 +211,7 @@
         resetForms();
         persistState();
         renderAll();
+        showToast("Projeto removido.", "success");
     }
 
     function handleMaterialSubmit(event) {
@@ -179,7 +221,8 @@
         const price = Number($("#material-price").val());
 
         if (!name || Number.isNaN(price) || price < 0) {
-            window.alert("Informe um material valido e um preco maior ou igual a zero.");
+            setFormMessage("#material-form-message", "Informe um material valido e um preco maior ou igual a zero.", "warning");
+            $("#material-name").trigger("focus");
             return;
         }
 
@@ -192,6 +235,9 @@
         persistState();
         renderAll();
         event.currentTarget.reset();
+        clearFormMessage("#material-form-message");
+        showToast('Material "' + name + '" salvo na base de custos.', "success");
+        $("#material-name").trigger("focus");
     }
 
     function handlePieceSubmit(event) {
@@ -199,12 +245,14 @@
         const project = getSelectedProject();
 
         if (!project) {
-            window.alert("Crie ou selecione um projeto antes de adicionar pecas.");
+            setFormMessage("#piece-form-message", "Crie ou selecione um projeto antes de adicionar pecas.", "warning");
+            openProjectPicker();
             return;
         }
 
         if (!state.materials.length) {
-            window.alert("Cadastre ao menos um material antes de adicionar pecas.");
+            setFormMessage("#piece-form-message", "Cadastre ao menos um material antes de adicionar pecas.", "warning");
+            openCostSettings();
             return;
         }
 
@@ -218,7 +266,7 @@
         };
 
         if (!piece.name || piece.widthCm <= 0 || piece.heightCm <= 0 || piece.quantity <= 0 || !piece.materialId) {
-            window.alert("Preencha todos os campos da peca com valores validos.");
+            setFormMessage("#piece-form-message", "Preencha todos os campos da peca com valores validos.", "warning");
             return;
         }
 
@@ -227,10 +275,16 @@
         renderAll();
         event.currentTarget.reset();
         $("#piece-quantity").val("1");
+        clearFormMessage("#piece-form-message");
+        renderPieceEstimate();
+        showToast('Peca "' + piece.name + '" adicionada ao projeto.', "success");
     }
 
-    function handleDeleteMaterial(event) {
+    async function handleDeleteMaterial(event) {
         const materialId = $(event.currentTarget).data("id");
+        const material = state.materials.find(function (entry) {
+            return entry.id === materialId;
+        });
         const pieceUsingMaterial = state.projects.some(function (project) {
             return project.pieces.some(function (piece) {
                 return piece.materialId === materialId;
@@ -238,7 +292,16 @@
         });
 
         if (pieceUsingMaterial) {
-            window.alert("Remova primeiro as pecas vinculadas a este material.");
+            showToast("Remova primeiro as pecas vinculadas a este material.", "warning");
+            return;
+        }
+
+        if (!(await requestConfirmation({
+            title: "Excluir material",
+            copy: 'Deseja remover o material "' + (material ? material.name : "selecionado") + '" da base de custos?',
+            confirmLabel: "Excluir material",
+            tone: "danger"
+        }))) {
             return;
         }
 
@@ -247,13 +310,28 @@
         });
         persistState();
         renderAll();
+        showToast("Material removido.", "success");
     }
 
-    function handleDeletePiece(event) {
+    async function handleDeletePiece(event) {
         const project = getSelectedProject();
         const pieceId = $(event.currentTarget).data("id");
+        let removedPiece = null;
 
         if (!project) {
+            return;
+        }
+
+        removedPiece = project.pieces.find(function (piece) {
+            return piece.id === pieceId;
+        }) || null;
+
+        if (!(await requestConfirmation({
+            title: "Excluir peca",
+            copy: 'Deseja remover a peca "' + (removedPiece ? removedPiece.name : "selecionada") + '" deste projeto?',
+            confirmLabel: "Excluir peca",
+            tone: "danger"
+        }))) {
             return;
         }
 
@@ -262,17 +340,23 @@
         });
         persistState();
         renderAll();
+        showToast("Peca removida.", "success");
     }
 
-    function handleClearData() {
+    async function handleClearData() {
         const project = getSelectedProject();
 
         if (!project) {
-            window.alert("Selecione um projeto para limpar os dados.");
+            showToast("Selecione um projeto para limpar os dados.", "warning");
             return;
         }
 
-        if (!window.confirm('Deseja remover todas as pecas do projeto "' + project.name + '"? A base de custos sera mantida para todos os projetos.')) {
+        if (!(await requestConfirmation({
+            title: "Limpar pecas do projeto",
+            copy: 'Deseja remover todas as pecas do projeto "' + project.name + '"? A base de custos sera mantida para todos os projetos.',
+            confirmLabel: "Limpar pecas",
+            tone: "danger"
+        }))) {
             return;
         }
 
@@ -280,17 +364,24 @@
         persistState();
         renderAll();
         resetForms();
+        showToast("Pecas do projeto removidas.", "success");
+    }
+
+    function handleMaterialInput() {
+        clearFormMessage("#material-form-message");
     }
 
     function renderAll() {
         renderRuntimeNotice();
         renderTabs();
+        renderJourneySteps();
         renderProjects();
         renderProjectContext();
         renderMaterials();
         renderMaterialSelect();
         renderPieces();
         renderSummary();
+        renderPieceEstimate();
     }
 
     function renderRuntimeNotice() {
@@ -374,10 +465,14 @@
 
     function renderMaterials() {
         const body = $("#materials-table-body");
+        const mobileList = $("#materials-mobile-list");
         body.empty();
+        mobileList.empty();
+        mobileList.prop("hidden", false);
 
         if (!state.materials.length) {
             body.append('<tr class="empty-state-row"><td colspan="3">Nenhum material cadastrado.</td></tr>');
+            mobileList.append('<article class="mobile-card mobile-empty-card"><strong>Nenhum material cadastrado.</strong><p>Abra a base de custos e cadastre o primeiro material para habilitar o formulario de pecas.</p></article>');
             return;
         }
 
@@ -394,6 +489,29 @@
                                 .attr("data-id", material.id)
                                 .text("Excluir")
                         )
+                    )
+            );
+
+            mobileList.append(
+                $("<article>")
+                    .addClass("mobile-card")
+                    .append(
+                        $("<div>")
+                            .addClass("mobile-card-topbar")
+                            .append($("<strong>").text(material.name))
+                            .append($("<span>").addClass("mobile-value").text(formatCurrency(material.price) + " / m²"))
+                    )
+                    .append($("<p>").addClass("mobile-card-copy").text("Disponivel em todos os projetos cadastrados."))
+                    .append(
+                        $("<div>")
+                            .addClass("mobile-card-actions")
+                            .append(
+                                $("<button>")
+                                    .attr("type", "button")
+                                    .addClass("table-action danger delete-material")
+                                    .attr("data-id", material.id)
+                                    .text("Excluir")
+                            )
                     )
             );
         });
@@ -430,15 +548,20 @@
     function renderPieces() {
         const project = getSelectedProject();
         const body = $("#pieces-table-body");
+        const mobileList = $("#pieces-mobile-list");
         body.empty();
+        mobileList.empty();
+        mobileList.prop("hidden", false);
 
         if (!project) {
             body.append('<tr class="empty-state-row"><td colspan="5">Crie ou selecione um projeto para adicionar pecas.</td></tr>');
+            mobileList.append('<article class="mobile-card mobile-empty-card"><strong>Selecione um projeto.</strong><p>O fluxo de pecas e consolidado sera liberado assim que houver um projeto ativo.</p></article>');
             return;
         }
 
         if (!project.pieces.length) {
             body.append('<tr class="empty-state-row"><td colspan="5">Nenhuma peca adicionada.</td></tr>');
+            mobileList.append('<article class="mobile-card mobile-empty-card"><strong>Nenhuma peca adicionada.</strong><p>Preencha a peca acima para visualizar os itens deste projeto em formato compacto.</p></article>');
             return;
         }
 
@@ -465,6 +588,35 @@
                                 .attr("data-id", piece.id)
                                 .text("Excluir")
                         )
+                    )
+            );
+
+            mobileList.append(
+                $("<article>")
+                    .addClass("mobile-card")
+                    .append(
+                        $("<div>")
+                            .addClass("mobile-card-topbar")
+                            .append($("<strong>").text(piece.name))
+                            .append($("<span>").addClass("mobile-value").text(formatCurrency(metrics.totalCost)))
+                    )
+                    .append(
+                        $("<dl>")
+                            .addClass("mobile-metrics")
+                            .append($("<div>").append($("<dt>").text("Material")).append($("<dd>").text(metrics.material ? metrics.material.name : "Material removido")))
+                            .append($("<div>").append($("<dt>").text("Medidas")).append($("<dd>").text(piece.quantity + " un. de " + formatMeasurement(piece.widthCm) + " x " + formatMeasurement(piece.heightCm))))
+                            .append($("<div>").append($("<dt>").text("Area total")).append($("<dd>").text(formatArea(metrics.totalAreaSqm))))
+                    )
+                    .append(
+                        $("<div>")
+                            .addClass("mobile-card-actions")
+                            .append(
+                                $("<button>")
+                                    .attr("type", "button")
+                                    .addClass("table-action danger delete-piece")
+                                    .attr("data-id", piece.id)
+                                    .text("Excluir")
+                            )
                     )
             );
         });
@@ -575,6 +727,103 @@
             material,
             totalAreaSqm,
             totalCost
+        };
+    }
+
+    function renderJourneySteps() {
+        const activeTab = getActiveTab();
+        const hasProject = Boolean(getSelectedProject());
+        const hasMaterials = state.materials.length > 0;
+        const hasPieces = hasProject && getSelectedProject().pieces.length > 0;
+
+        $(".journey-step").each(function () {
+            const step = $(this).data("step");
+            let status = "upcoming";
+
+            if (step === "project") {
+                status = hasProject ? "complete" : "active";
+            }
+
+            if (step === "materials") {
+                if (!hasProject) {
+                    status = "upcoming";
+                } else if (hasMaterials) {
+                    status = "complete";
+                } else {
+                    status = "active";
+                }
+            }
+
+            if (step === "pieces") {
+                if (!hasProject || !hasMaterials) {
+                    status = "upcoming";
+                } else if (activeTab === "composition") {
+                    status = "active";
+                } else if (hasPieces) {
+                    status = "complete";
+                }
+            }
+
+            if (step === "summary") {
+                if (!hasProject || !hasPieces) {
+                    status = "upcoming";
+                } else if (activeTab === "summary") {
+                    status = "active";
+                } else {
+                    status = "complete";
+                }
+            }
+
+            $(this)
+                .attr("data-state", status)
+                .toggleClass("is-complete", status === "complete")
+                .toggleClass("is-active", status === "active");
+        });
+    }
+
+    function renderPieceEstimate() {
+        const estimate = calculateDraftPieceMetrics();
+        const estimateRoot = $("#piece-estimate");
+        const helper = $("#piece-form-helper");
+
+        if (!estimate.hasInput) {
+            estimateRoot.html("<strong>Previa da peca</strong><p>Preencha os campos para visualizar area e custo estimado.</p>");
+            helper.text("Informe dimensoes e quantidade para ver a estimativa antes de salvar.");
+            return;
+        }
+
+        helper.text(estimate.helperText);
+        estimateRoot.html(
+            "<strong>Previa da peca</strong>" +
+            "<p>Area estimada: " + escapeHtml(formatArea(estimate.totalAreaSqm)) + "</p>" +
+            "<p>Custo estimado: " + escapeHtml(formatCurrency(estimate.totalCost)) + "</p>"
+        );
+    }
+
+    function calculateDraftPieceMetrics() {
+        const widthCm = Number($("#piece-width").val());
+        const heightCm = Number($("#piece-height").val());
+        const quantity = Number($("#piece-quantity").val() || 0);
+        const materialId = $("#piece-material").val();
+        const material = state.materials.find(function (entry) {
+            return entry.id === materialId;
+        }) || null;
+        const hasInput = Boolean($("#piece-name").val().trim() || widthCm || heightCm || quantity || materialId);
+
+        if (widthCm <= 0 || heightCm <= 0 || quantity <= 0) {
+            return {
+                hasInput,
+                totalAreaSqm: 0,
+                totalCost: 0,
+                helperText: state.materials.length ? "Complete largura, altura e quantidade para calcular a previa." : "Cadastre um material para liberar a estimativa de custo."
+            };
+        }
+
+        return {
+            hasInput,
+            totalAreaSqm: (widthCm * heightCm * quantity) / 10000,
+            totalCost: ((widthCm * heightCm * quantity) / 10000) * (material ? material.price : 0),
+            helperText: material ? "Os valores abaixo antecipam o impacto desta peca no consolidado." : "Selecione um material para calcular o custo estimado desta peca."
         };
     }
 
@@ -703,12 +952,15 @@
         $("#toggle-project-picker")
             .text(hasProject ? "Trocar ou criar outro projeto" : "Selecionar ou criar projeto")
             .attr("aria-expanded", String(shouldShowPicker));
+        $("#hero-start-action").text(hasProject ? "Trocar projeto" : "Comecar projeto");
+        $("#hero-material-action").text(state.materials.length ? "Editar base de custos" : "Base de custos");
         $("#project-picker-panel").prop("hidden", !shouldShowPicker);
         $("#project-workspace").prop("hidden", !hasProject);
         $("#material-form :input").prop("disabled", false);
         $("#piece-form :input").not("#piece-material").prop("disabled", !hasProject);
         $("#piece-material").prop("disabled", !hasProject || state.materials.length === 0);
         $("#clear-data").prop("disabled", !hasProject);
+        $("#quick-add-material").prop("disabled", false);
 
         ["#piece-project-badge", "#summary-project-badge"].forEach(function (selector) {
             $(selector)
@@ -719,6 +971,10 @@
         $("#material-project-badge")
             .text("Disponivel para todos os projetos")
             .prop("hidden", false);
+
+        if (!hasProject) {
+            clearFormMessage("#piece-form-message");
+        }
     }
 
     function toggleProjectPicker() {
@@ -755,6 +1011,84 @@
         }
 
         $("#piece-quantity").val("1");
+        clearFormMessage("#material-form-message");
+        clearFormMessage("#piece-form-message");
+        renderPieceEstimate();
+    }
+
+    function setFormMessage(selector, message, tone) {
+        $(selector)
+            .prop("hidden", false)
+            .attr("data-tone", tone || "warning")
+            .text(message);
+    }
+
+    function clearFormMessage(selector) {
+        $(selector)
+            .prop("hidden", true)
+            .removeAttr("data-tone")
+            .empty();
+    }
+
+    function showToast(message, tone) {
+        const toastRegion = $("#toast-region");
+        const toast = $("<article>")
+            .addClass("toast")
+            .attr("data-tone", tone || "success")
+            .text(message);
+
+        window.clearTimeout(uiState.toastTimer);
+        toastRegion.empty().append(toast);
+        uiState.toastTimer = window.setTimeout(function () {
+            toast.fadeOut(180, function () {
+                $(this).remove();
+            });
+        }, TOAST_DURATION_MS);
+    }
+
+    function requestConfirmation(options) {
+        const settings = options || {};
+        const confirmDialog = $("#confirm-dialog");
+        const confirmOverlay = $("#confirm-overlay");
+
+        $("#confirm-title").text(settings.title || "Confirmar acao");
+        $("#confirm-copy").text(settings.copy || "Revise a acao antes de continuar.");
+        $("#confirm-accept")
+            .text(settings.confirmLabel || "Confirmar")
+            .attr("data-tone", settings.tone || "danger");
+
+        confirmOverlay.prop("hidden", false);
+        confirmDialog.prop("hidden", false);
+
+        return new Promise(function (resolve) {
+            uiState.confirmResolver = resolve;
+            window.setTimeout(function () {
+                $("#confirm-cancel").trigger("focus");
+            }, 0);
+        });
+    }
+
+    function resolveConfirmation(accepted) {
+        const resolver = uiState.confirmResolver;
+
+        if (!resolver) {
+            return;
+        }
+
+        uiState.confirmResolver = null;
+        $("#confirm-dialog").prop("hidden", true);
+        $("#confirm-overlay").prop("hidden", true);
+        resolver(Boolean(accepted));
+    }
+
+    function scrollToElement(selector) {
+        const node = $(selector)[0];
+
+        if (!node || typeof node.scrollIntoView !== "function") {
+            return;
+        }
+
+        node.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function escapeHtml(value) {

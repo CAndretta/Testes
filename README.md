@@ -38,6 +38,14 @@ Foi criada uma aplicacao PWA local em HTML, CSS, JavaScript e jQuery com persist
 - A composicao e o consolidado ficam ocultos ate existir um projeto selecionado.
 - A troca ou criacao de outro projeto acontece em um painel separado para evitar interrupcao acidental do preenchimento atual.
 - A exclusao do projeto fica dentro da area de composicao, junto de confirmacao, para reduzir risco de remocao acidental durante a troca de contexto.
+- Fluxo guiado em quatro etapas: projeto, materiais, pecas e resumo.
+- Hero com acoes diretas para iniciar projeto ou abrir a base de custos.
+- Base de custos com comportamento de painel lateral no desktop e bottom sheet no mobile.
+- Feedback visual por toast e mensagens inline no lugar de alertas nativos.
+- Confirmacoes destrutivas feitas na propria interface, sem `window.confirm`.
+- Previa dinamica de area e custo durante o preenchimento da peca.
+- Listagem em cards no mobile para materiais e pecas, mantendo tabela no desktop.
+- Tabs compactas e fixadas no mobile para facilitar alternancia entre composicao e consolidado.
 
 ### Estrutura criada
 
@@ -61,3 +69,4 @@ Foi criada uma aplicacao PWA local em HTML, CSS, JavaScript e jQuery com persist
 - O calculo da area usa a formula `(largura_cm x altura_cm / 10000) x quantidade`.
 - O custo final considera o preco cadastrado por m² do material selecionado.
 - Ao abrir por `file:///`, a persistencia continua funcionando, mas instalacao PWA e cache offline exigem servidor local por restricao do navegador.
+- O sistema agora prioriza o uso em telas pequenas sem perder a leitura em desktop, com foco em fluxo guiado, feedback contextual e acoes maiores para toque.
