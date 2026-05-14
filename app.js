@@ -1,5 +1,6 @@
 (function ($) {
     const STORAGE_KEY = "calculadora-materiais-state";
+    const DEFAULT_TAB = "composition";
 
     const state = loadState();
 
@@ -39,6 +40,11 @@
         $("#materials-table-body").on("click", ".delete-material", handleDeleteMaterial);
         $("#pieces-table-body").on("click", ".delete-piece", handleDeletePiece);
         $("#clear-data").on("click", handleClearData);
+        $(".tab-button").on("click", handleTabChange);
+    }
+
+    function handleTabChange(event) {
+        setActiveTab($(event.currentTarget).data("tab-target"));
     }
 
     function handleMaterialSubmit(event) {
@@ -134,10 +140,41 @@
     }
 
     function renderAll() {
+        renderTabs();
         renderMaterials();
         renderMaterialSelect();
         renderPieces();
         renderSummary();
+    }
+
+    function renderTabs() {
+        setActiveTab(getActiveTab());
+    }
+
+    function getActiveTab() {
+        const activeButton = $(".tab-button.is-active").first();
+        return activeButton.data("tab-target") || DEFAULT_TAB;
+    }
+
+    function setActiveTab(tabName) {
+        const nextTab = tabName || DEFAULT_TAB;
+
+        $(".tab-button").each(function () {
+            const button = $(this);
+            const isActive = button.data("tab-target") === nextTab;
+
+            button.toggleClass("is-active", isActive);
+            button.attr("aria-selected", String(isActive));
+            button.attr("tabindex", isActive ? "0" : "-1");
+        });
+
+        $(".tab-panel").each(function () {
+            const panel = $(this);
+            const isActive = panel.data("tab-panel") === nextTab;
+
+            panel.toggleClass("is-active", isActive);
+            panel.prop("hidden", !isActive);
+        });
     }
 
     function renderMaterials() {

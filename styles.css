@@ -115,8 +115,54 @@ select {
     gap: 24px;
 }
 
+.workspace-shell {
+    display: grid;
+    gap: 18px;
+}
+
+.tab-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.tab-button {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 12px 18px;
+    background: rgba(255, 252, 247, 0.72);
+    color: var(--muted);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.tab-button:hover {
+    transform: translateY(-1px);
+}
+
+.tab-button.is-active {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    border-color: transparent;
+    color: #f7f3ed;
+    box-shadow: 0 16px 30px rgba(18, 37, 61, 0.18);
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.is-active {
+    display: block;
+}
+
 .panel {
     padding: 24px;
+}
+
+.panel-focus {
+    border-color: rgba(30, 58, 95, 0.16);
+    box-shadow: 0 24px 70px rgba(18, 37, 61, 0.18);
 }
 
 .panel-header {
@@ -311,5 +357,10 @@ thead th {
     .panel-header {
         align-items: start;
         flex-direction: column;
+    }
+
+    .tab-strip {
+        display: grid;
+        grid-template-columns: 1fr;
     }
 }

@@ -38,138 +38,158 @@
         </header>
 
         <main class="layout">
-            <section class="panel">
-                <div class="panel-header">
-                    <div>
-                        <p class="section-tag">Base de custos</p>
-                        <h2>Materiais</h2>
-                    </div>
+            <section class="workspace-shell">
+                <div class="tab-strip" role="tablist" aria-label="Areas do projeto">
+                    <button type="button" class="tab-button is-active" id="tab-button-composition" data-tab-target="composition" role="tab" aria-selected="true" aria-controls="tab-panel-composition">
+                        Composicao do projeto
+                    </button>
+                    <button type="button" class="tab-button" id="tab-button-costs" data-tab-target="costs" role="tab" aria-selected="false" aria-controls="tab-panel-costs" tabindex="-1">
+                        Base de custos
+                    </button>
+                    <button type="button" class="tab-button" id="tab-button-summary" data-tab-target="summary" role="tab" aria-selected="false" aria-controls="tab-panel-summary" tabindex="-1">
+                        Detalhamento do consolidado
+                    </button>
                 </div>
 
-                <form id="material-form" class="stack-form">
-                    <div class="field-grid two-columns">
-                        <label>
-                            <span>Nome do material</span>
-                            <input type="text" id="material-name" maxlength="60" placeholder="Ex.: Porcelanato Premium" required>
-                        </label>
-                        <label>
-                            <span>Preco por m²</span>
-                            <input type="number" id="material-price" min="0" step="0.01" placeholder="0,00" required>
-                        </label>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="primary-button">Salvar material</button>
-                    </div>
-                </form>
+                <section class="tab-panel is-active" id="tab-panel-composition" data-tab-panel="composition" role="tabpanel" aria-labelledby="tab-button-composition">
+                    <section class="panel panel-focus">
+                        <div class="panel-header">
+                            <div>
+                                <p class="section-tag">Composicao do projeto</p>
+                                <h2>Pecas e quantidades</h2>
+                            </div>
+                        </div>
 
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Material</th>
-                                <th>Preco m²</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="materials-table-body">
-                            <tr class="empty-state-row">
-                                <td colspan="3">Nenhum material cadastrado.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                        <form id="piece-form" class="stack-form">
+                            <div class="field-grid three-columns">
+                                <label>
+                                    <span>Descricao da peca</span>
+                                    <input type="text" id="piece-name" maxlength="80" placeholder="Ex.: Piso sala" required>
+                                </label>
+                                <label>
+                                    <span>Largura (cm)</span>
+                                    <input type="number" id="piece-width" min="0.01" step="0.01" placeholder="0,00" required>
+                                </label>
+                                <label>
+                                    <span>Altura (cm)</span>
+                                    <input type="number" id="piece-height" min="0.01" step="0.01" placeholder="0,00" required>
+                                </label>
+                            </div>
+                            <div class="field-grid two-columns aligned-end">
+                                <label>
+                                    <span>Quantidade</span>
+                                    <input type="number" id="piece-quantity" min="1" step="1" value="1" required>
+                                </label>
+                                <label>
+                                    <span>Material</span>
+                                    <select id="piece-material" required>
+                                        <option value="">Selecione um material</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="primary-button">Adicionar peca</button>
+                            </div>
+                        </form>
 
-            <section class="panel">
-                <div class="panel-header">
-                    <div>
-                        <p class="section-tag">Composicao do projeto</p>
-                        <h2>Pecas e quantidades</h2>
-                    </div>
-                </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Peca</th>
+                                        <th>Material</th>
+                                        <th>Area total</th>
+                                        <th>Custo total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pieces-table-body">
+                                    <tr class="empty-state-row">
+                                        <td colspan="5">Nenhuma peca adicionada.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
 
-                <form id="piece-form" class="stack-form">
-                    <div class="field-grid three-columns">
-                        <label>
-                            <span>Descricao da peca</span>
-                            <input type="text" id="piece-name" maxlength="80" placeholder="Ex.: Piso sala" required>
-                        </label>
-                        <label>
-                            <span>Largura (cm)</span>
-                            <input type="number" id="piece-width" min="0.01" step="0.01" placeholder="0,00" required>
-                        </label>
-                        <label>
-                            <span>Altura (cm)</span>
-                            <input type="number" id="piece-height" min="0.01" step="0.01" placeholder="0,00" required>
-                        </label>
-                    </div>
-                    <div class="field-grid two-columns aligned-end">
-                        <label>
-                            <span>Quantidade</span>
-                            <input type="number" id="piece-quantity" min="1" step="1" value="1" required>
-                        </label>
-                        <label>
-                            <span>Material</span>
-                            <select id="piece-material" required>
-                                <option value="">Selecione um material</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="primary-button">Adicionar peca</button>
-                    </div>
-                </form>
+                <section class="tab-panel" id="tab-panel-costs" data-tab-panel="costs" role="tabpanel" aria-labelledby="tab-button-costs" hidden>
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <p class="section-tag">Base de custos</p>
+                                <h2>Materiais</h2>
+                            </div>
+                        </div>
 
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Peca</th>
-                                <th>Material</th>
-                                <th>Area total</th>
-                                <th>Custo total</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="pieces-table-body">
-                            <tr class="empty-state-row">
-                                <td colspan="5">Nenhuma peca adicionada.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                        <form id="material-form" class="stack-form">
+                            <div class="field-grid two-columns">
+                                <label>
+                                    <span>Nome do material</span>
+                                    <input type="text" id="material-name" maxlength="60" placeholder="Ex.: Porcelanato Premium" required>
+                                </label>
+                                <label>
+                                    <span>Preco por m²</span>
+                                    <input type="number" id="material-price" min="0" step="0.01" placeholder="0,00" required>
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="primary-button">Salvar material</button>
+                            </div>
+                        </form>
 
-            <section class="panel panel-summary">
-                <div class="panel-header">
-                    <div>
-                        <p class="section-tag">Consolidado</p>
-                        <h2>Resumo do projeto</h2>
-                    </div>
-                    <button type="button" id="clear-data" class="ghost-button">Limpar dados</button>
-                </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Material</th>
+                                        <th>Preco m²</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materials-table-body">
+                                    <tr class="empty-state-row">
+                                        <td colspan="3">Nenhum material cadastrado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
 
-                <div class="summary-grid">
-                    <article>
-                        <small>Area total</small>
-                        <strong id="total-area">0,00 m²</strong>
-                    </article>
-                    <article>
-                        <small>Custo total</small>
-                        <strong id="total-cost">R$ 0,00</strong>
-                    </article>
-                    <article>
-                        <small>Ticket medio por item</small>
-                        <strong id="average-cost">R$ 0,00</strong>
-                    </article>
-                </div>
+                <section class="tab-panel" id="tab-panel-summary" data-tab-panel="summary" role="tabpanel" aria-labelledby="tab-button-summary" hidden>
+                    <section class="panel panel-summary">
+                        <div class="panel-header">
+                            <div>
+                                <p class="section-tag">Consolidado</p>
+                                <h2>Resumo do projeto</h2>
+                            </div>
+                            <button type="button" id="clear-data" class="ghost-button">Limpar dados</button>
+                        </div>
 
-                <div>
-                    <h3>Resumo por material</h3>
-                    <div id="material-breakdown" class="breakdown-list">
-                        <p class="empty-breakdown">Adicione materiais e pecas para visualizar o resumo.</p>
-                    </div>
-                </div>
+                        <div class="summary-grid">
+                            <article>
+                                <small>Area total</small>
+                                <strong id="total-area">0,00 m²</strong>
+                            </article>
+                            <article>
+                                <small>Custo total</small>
+                                <strong id="total-cost">R$ 0,00</strong>
+                            </article>
+                            <article>
+                                <small>Ticket medio por item</small>
+                                <strong id="average-cost">R$ 0,00</strong>
+                            </article>
+                        </div>
+
+                        <div>
+                            <h3>Resumo por material</h3>
+                            <div id="material-breakdown" class="breakdown-list">
+                                <p class="empty-breakdown">Adicione materiais e pecas para visualizar o resumo.</p>
+                            </div>
+                        </div>
+                    </section>
+                </section>
             </section>
         </main>
     </div>
