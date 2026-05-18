@@ -19,6 +19,25 @@
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+body[data-theme="dark"] {
+    --bg: #192015;
+    --surface: rgba(30, 38, 25, 0.92);
+    --surface-strong: #222b1d;
+    --line: rgba(190, 214, 131, 0.16);
+    --text: #eef4d7;
+    --muted: #afbb93;
+    --accent: #a7d547;
+    --accent-strong: #7faa2c;
+    --highlight: #ffbf57;
+    --success: #73bc6f;
+    --danger: #f08d6f;
+    --shadow: 0 20px 60px rgba(6, 10, 4, 0.32);
+    --accent-soft: rgba(167, 213, 71, 0.14);
+    --accent-soft-strong: rgba(167, 213, 71, 0.24);
+    --focus-ring: rgba(167, 213, 71, 0.28);
+    --overlay: rgba(7, 10, 6, 0.52);
+}
+
 body[data-font-size="medium"] {
     --font-scale: 1.12;
 }
@@ -45,6 +64,13 @@ body {
         radial-gradient(circle at top left, rgba(255, 184, 77, 0.24), transparent 28%),
         radial-gradient(circle at top right, rgba(176, 214, 92, 0.18), transparent 26%),
         linear-gradient(180deg, #fffdf4 0%, var(--bg) 100%);
+}
+
+body[data-theme="dark"] {
+    background:
+        radial-gradient(circle at top left, rgba(255, 191, 87, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(167, 213, 71, 0.16), transparent 26%),
+        linear-gradient(180deg, #11170f 0%, var(--bg) 100%);
 }
 
 button,
@@ -107,16 +133,13 @@ select {
 
 .accessibility-label,
 .accessibility-copy {
+    margin: 0;
     color: var(--muted);
     font-size: 0.88rem;
 }
 
 .accessibility-label {
     font-weight: 700;
-}
-
-.accessibility-copy {
-    margin: 0;
 }
 
 .accessibility-panel {
@@ -141,6 +164,10 @@ select {
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
+body[data-theme="dark"] .segment-button {
+    background: rgba(39, 49, 32, 0.92);
+}
+
 .segment-button:hover {
     transform: translateY(-1px);
 }
@@ -159,11 +186,16 @@ select {
 
 .hero-card,
 .panel {
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 24px;
     background: var(--surface);
     backdrop-filter: blur(12px);
     box-shadow: var(--shadow);
+}
+
+body[data-theme="dark"] .hero-card,
+body[data-theme="dark"] .panel {
+    border-color: rgba(194, 220, 135, 0.12);
 }
 
 .hero-card {
@@ -203,8 +235,7 @@ select {
     font-weight: 700;
 }
 
-.hero-metrics small,
-.summary-grid small {
+.hero-metrics small {
     color: rgba(255, 251, 242, 0.82);
 }
 
@@ -225,6 +256,10 @@ select {
     box-shadow: var(--shadow);
 }
 
+body[data-theme="dark"] .runtime-notice {
+    background: rgba(30, 38, 25, 0.92);
+}
+
 .runtime-notice strong {
     color: var(--accent-strong);
 }
@@ -243,11 +278,7 @@ select {
     background: rgba(247, 251, 238, 0.96);
 }
 
-.workspace-shell {
-    display: grid;
-    gap: 16px;
-}
-
+.workspace-shell,
 .project-workspace {
     display: grid;
     gap: 16px;
@@ -275,6 +306,10 @@ select {
     border: 1px solid var(--line);
     border-radius: 18px;
     background: rgba(255, 253, 250, 0.72);
+}
+
+body[data-theme="dark"] .journey-step {
+    background: rgba(34, 43, 29, 0.9);
 }
 
 .journey-step span {
@@ -335,6 +370,10 @@ select {
     font-weight: 700;
     cursor: pointer;
     transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+body[data-theme="dark"] .tab-button {
+    background: rgba(34, 43, 29, 0.88);
 }
 
 .tab-button:hover {
@@ -398,6 +437,12 @@ select {
     border: 1px solid var(--line);
     border-radius: 20px;
     background: rgba(255, 253, 250, 0.72);
+}
+
+body[data-theme="dark"] .project-picker-panel,
+body[data-theme="dark"] .estimate-card,
+body[data-theme="dark"] .mobile-empty-card {
+    background: rgba(34, 43, 29, 0.88);
 }
 
 .project-picker-section {
@@ -507,6 +552,11 @@ select {
     color: var(--text);
 }
 
+body[data-theme="dark"] input,
+body[data-theme="dark"] select {
+    box-shadow: inset 0 0 0 1px rgba(194, 220, 135, 0.03);
+}
+
 input:focus,
 select:focus,
 button:focus {
@@ -521,14 +571,6 @@ button:focus {
 
 .form-actions-start {
     justify-content: flex-start;
-}
-
-.inline-support {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
 }
 
 .estimate-card {
@@ -619,6 +661,13 @@ select:disabled:hover {
     border: 1px solid var(--line);
     background: var(--surface-strong);
     box-shadow: 0 14px 30px rgba(109, 126, 55, 0.08);
+}
+
+body[data-theme="dark"] .mobile-card,
+body[data-theme="dark"] .summary-grid article,
+body[data-theme="dark"] .breakdown-card,
+body[data-theme="dark"] .settings-panel-card {
+    background: rgba(34, 43, 29, 0.94);
 }
 
 .mobile-empty-card {
@@ -732,6 +781,10 @@ thead th {
     overflow-y: auto;
 }
 
+body[data-theme="dark"] .settings-panel {
+    background: linear-gradient(180deg, rgba(24, 31, 20, 0.98) 0%, rgba(18, 24, 15, 0.98) 100%);
+}
+
 .settings-panel-header {
     display: flex;
     align-items: flex-start;
@@ -769,7 +822,8 @@ thead th {
     border: 1px solid var(--line);
 }
 
-.summary-grid small {
+.summary-grid small,
+.breakdown-card p {
     color: var(--muted);
 }
 
@@ -787,7 +841,6 @@ thead th {
 
 .breakdown-card p {
     margin: 6px 0 0;
-    color: var(--muted);
 }
 
 .toast-region {
@@ -835,6 +888,10 @@ thead th {
     transform: translate(-50%, -50%);
     background: var(--surface-strong);
     box-shadow: var(--shadow);
+}
+
+body[data-theme="dark"] .confirm-dialog {
+    border: 1px solid rgba(194, 220, 135, 0.12);
 }
 
 .confirm-dialog h2 {
@@ -896,9 +953,12 @@ thead th {
         z-index: 5;
         padding: 10px;
         border-radius: 20px;
-        background: rgba(243, 239, 231, 0.9);
         background: rgba(247, 244, 230, 0.92);
         backdrop-filter: blur(10px);
+    }
+
+    body[data-theme="dark"] .tab-strip {
+        background: rgba(29, 37, 24, 0.92);
     }
 
     .settings-panel {
@@ -909,7 +969,7 @@ thead th {
         height: min(82vh, 760px);
         border-radius: 28px 28px 0 0;
         padding: 18px 18px 28px;
-        box-shadow: 0 -24px 60px rgba(18, 37, 61, 0.18);
+        box-shadow: 0 -24px 60px rgba(109, 126, 55, 0.18);
     }
 
     .desktop-table-wrap {

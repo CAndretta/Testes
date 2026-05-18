@@ -7,22 +7,28 @@
     const TOAST_DURATION_MS = 3200;
     const DEFAULT_FONT_SIZE = "default";
     const ALLOWED_FONT_SIZES = ["default", "medium", "large"];
+    const DEFAULT_THEME_MODE = "system";
+    const ALLOWED_THEME_MODES = ["system", "light", "dark"];
+    const THEME_COLOR_LIGHT = "#85b53d";
+    const THEME_COLOR_DARK = "#1f2a1a";
 
     const state = loadState();
     const uiState = {
         projectPickerOpen: !state.selectedProjectId,
         confirmResolver: null,
-        toastTimer: 0
+        toastTimer: 0,
+        systemThemeQuery: getSystemThemeQuery()
     };
 
     $(function () {
         bindEvents();
+        bindSystemThemeListener();
         renderAll();
         registerServiceWorker();
     });
 
     function loadState() {
-        const fallback = { projects: [], materials: [], selectedProjectId: "", fontSize: DEFAULT_FONT_SIZE };
+        const fallback = { projects: [], materials: [], selectedProjectId: "", fontSize: DEFAULT_FONT_SIZE, themeMode: DEFAULT_THEME_MODE };
         const rawState = window.localStorage.getItem(STORAGE_KEY);
 
         if (!rawState) {
@@ -41,7 +47,8 @@
                     projects,
                     materials,
                     selectedProjectId,
-                    fontSize: normalizeFontSize(parsed.fontSize)
+                    fontSize: normalizeFontSize(parsed.fontSize),
+                    themeMode: normalizeThemeMode(parsed.themeMode)
                 };
             }
 
@@ -56,7 +63,8 @@
                         pieces: Array.isArray(parsed.pieces) ? parsed.pieces.map(normalizePiece).filter(Boolean) : []
                     }],
                     selectedProjectId: migratedProjectId,
-                    fontSize: DEFAULT_FONT_SIZE
+                    fontSize: DEFAULT_FONT_SIZE,
+                    themeMode: DEFAULT_THEME_MODE
                 };
             }
 
@@ -64,7 +72,8 @@
                 projects: [],
                 materials: [],
                 selectedProjectId: "",
-                fontSize: DEFAULT_FONT_SIZE
+                fontSize: DEFAULT_FONT_SIZE,
+                themeMode: DEFAULT_THEME_MODE
             };
         } catch (error) {
             console.warn("Nao foi possivel carregar o estado salvo.", error);
@@ -84,6 +93,7 @@
         $("#hero-start-action").on("click", handleHeroStartAction);
         $("#hero-material-action").on("click", openCostSettings);
         $("#font-size-controls").on("click", ".segment-button", handleFontSizeChange);
+        $("#theme-mode-controls").on("click", ".segment-button", handleThemeModeChange);
         $("#material-form").on("submit", handleMaterialSubmit);
         $("#piece-form").on("submit", handlePieceSubmit);
         $("#materials-table-body, #materials-mobile-list").on("click", ".delete-material", handleDeleteMaterial);
@@ -123,6 +133,45 @@
         applyFontSize();
         renderFontSizeControls();
         showToast("Tamanho da fonte atualizado.", "success");
+    }
+
+    function handleThemeModeChange(event) {
+        const requestedMode = $(event.currentTarget).data("theme-mode");
+        const themeMode = normalizeThemeMode(requestedMode);
+
+        if (themeMode === state.themeMode) {
+            return;
+        }
+
+        state.themeMode = themeMode;
+        persistState();
+        applyThemeMode();
+        renderThemeModeControls();
+        showToast("Tema visual atualizado.", "success");
+    }
+
+    function bindSystemThemeListener() {
+        if (!uiState.systemThemeQuery) {
+            return;
+        }
+
+        const handler = function () {
+            if (state.themeMode !== DEFAULT_THEME_MODE) {
+                return;
+            }
+
+            applyThemeMode();
+            renderThemeModeControls();
+        };
+
+        if (typeof uiState.systemThemeQuery.addEventListener === "function") {
+            uiState.systemThemeQuery.addEventListener("change", handler);
+            return;
+        }
+
+        if (typeof uiState.systemThemeQuery.addListener === "function") {
+            uiState.systemThemeQuery.addListener(handler);
+        }
     }
 
     function openCostSettings() {
@@ -413,7 +462,9 @@
 
     function renderAll() {
         applyFontSize();
+        applyThemeMode();
         renderFontSizeControls();
+        renderThemeModeControls();
         renderRuntimeNotice();
         renderTabs();
         renderJourneySteps();
@@ -776,12 +827,34 @@
         $("body").attr("data-font-size", normalizeFontSize(state.fontSize));
     }
 
+    function applyThemeMode() {
+        const resolvedTheme = getResolvedThemeMode();
+
+        $("body")
+            .attr("data-theme-mode", normalizeThemeMode(state.themeMode))
+            .attr("data-theme", resolvedTheme);
+
+        $("meta[name='theme-color']").attr("content", resolvedTheme === "dark" ? THEME_COLOR_DARK : THEME_COLOR_LIGHT);
+    }
+
     function renderFontSizeControls() {
         const currentFontSize = normalizeFontSize(state.fontSize);
 
         $("#font-size-controls .segment-button").each(function () {
             const button = $(this);
             const isActive = button.data("font-size") === currentFontSize;
+
+            button.toggleClass("is-active", isActive);
+            button.attr("aria-pressed", String(isActive));
+        });
+    }
+
+    function renderThemeModeControls() {
+        const currentThemeMode = normalizeThemeMode(state.themeMode);
+
+        $("#theme-mode-controls .segment-button").each(function () {
+            const button = $(this);
+            const isActive = button.data("theme-mode") === currentThemeMode;
 
             button.toggleClass("is-active", isActive);
             button.attr("aria-pressed", String(isActive));
@@ -1124,6 +1197,28 @@
 
     function normalizeFontSize(value) {
         return ALLOWED_FONT_SIZES.indexOf(value) >= 0 ? value : DEFAULT_FONT_SIZE;
+    }
+
+    function normalizeThemeMode(value) {
+        return ALLOWED_THEME_MODES.indexOf(value) >= 0 ? value : DEFAULT_THEME_MODE;
+    }
+
+    function getResolvedThemeMode() {
+        const themeMode = normalizeThemeMode(state.themeMode);
+
+        if (themeMode === "light" || themeMode === "dark") {
+            return themeMode;
+        }
+
+        return uiState.systemThemeQuery && uiState.systemThemeQuery.matches ? "dark" : "light";
+    }
+
+    function getSystemThemeQuery() {
+        if (typeof window.matchMedia !== "function") {
+            return null;
+        }
+
+        return window.matchMedia("(prefers-color-scheme: dark)");
     }
 
     function requestConfirmation(options) {
