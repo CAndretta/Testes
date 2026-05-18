@@ -45,6 +45,7 @@ Foi criada uma aplicação PWA local em HTML, CSS, JavaScript e jQuery, com pers
 - Listagem em cards no mobile para materiais e peças, mantendo tabela no desktop.
 - Tabs compactas e fixadas no mobile para facilitar a alternância entre composição e consolidado.
 - Controle de acessibilidade visual com três tamanhos de fonte, persistido no navegador para facilitar a leitura por pessoas com baixa visão.
+- Paleta visual atualizada para tons cítricos e contraste mais suave entre superfícies claras e elementos de destaque.
 
 ### Estrutura criada
 
