@@ -7,8 +7,6 @@ Este ambiente é usado para testes do sistema de versionamento com Git e GitHub,
 
 ---------------
 
-Instruções para agentes de IA.
-
 Este será uma aplicação PWA para calculo de material/custo por metro quadrado, atravez da inserção de medidas de peças e suas quantidades.
 
 Deve opermitir cadastrar os tipos de materias e seus preços para que seja possivel o calculo final total.
@@ -17,7 +15,7 @@ Esta aplicação deve rodar localmente e usar o armazenamento do navegador para 
 
 É necessário que seja responsivo para Web ou Desktop apenas.
 
-Este arquivo deve ser incrementado pelo agende de IA quando fizer ajustes no sistema e sempre deve ser analisado antes de novas alterações.
+Este arquivo deve ser incrementado quando houvererem ajustes no sistema e sempre deve ser analisado antes de novas alterações.
 
 --------------
 
