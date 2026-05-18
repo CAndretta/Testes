@@ -19,7 +19,7 @@
                 <p class="hero-copy">Cadastre materiais, monte as pecas do projeto e acompanhe area total e custo final com persistencia no navegador.</p>
                 <div class="hero-actions">
                     <button type="button" id="hero-start-action" class="primary-button">Comecar projeto</button>
-                    <button type="button" id="hero-material-action" class="ghost-button">Base de custos</button>
+                    <button type="button" id="hero-material-action" class="ghost-button">Configuracoes</button>
                 </div>
             </div>
             <div class="hero-card hero-card-summary">
@@ -51,12 +51,6 @@
         <main class="layout">
             <section class="workspace-shell">
                 <section class="progress-strip panel" aria-labelledby="progress-title">
-                    <div class="panel-header panel-header-compact">
-                        <div>
-                            <p class="section-tag">Fluxo guiado</p>
-                            <h2 id="progress-title">Preencha em quatro etapas</h2>
-                        </div>
-                    </div>
                     <div id="journey-steps" class="journey-steps" aria-live="polite">
                         <article class="journey-step" data-step="project">
                             <span>1</span>
@@ -99,6 +93,8 @@
                             Selecionar ou criar projeto
                         </button>
                     </div>
+
+                    <div id="project-material-warning" class="form-message" data-tone="warning" hidden aria-live="polite"></div>
 
                     <div id="project-picker-panel" class="project-picker-panel">
                         <div class="project-picker-section">
@@ -182,10 +178,7 @@
                                     </select>
                                 </label>
                             </div>
-                            <div class="inline-support">
-                                <button type="button" id="quick-add-material" class="ghost-button">Cadastrar material agora</button>
-                                <p id="piece-form-helper" class="helper-text">Informe dimensoes e quantidade para ver a estimativa antes de salvar.</p>
-                            </div>
+                            <p id="piece-form-helper" class="helper-text">Informe dimensoes e quantidade para ver a estimativa antes de salvar.</p>
                             <div id="piece-estimate" class="estimate-card" aria-live="polite">
                                 <strong>Previa da peca</strong>
                                 <p>Preencha os campos para visualizar area e custo estimado.</p>
@@ -276,6 +269,23 @@
                 <span aria-hidden="true">×</span>
             </button>
         </div>
+
+        <section class="panel settings-panel-card accessibility-panel">
+            <div class="panel-header panel-header-compact">
+                <div>
+                    <p class="section-tag">Acessibilidade</p>
+                    <h3>Tamanho da fonte</h3>
+                </div>
+            </div>
+            <div class="accessibility-toolbar" aria-label="Configuracoes de acessibilidade visual">
+                <p class="accessibility-copy">Escolha a escala de leitura mais confortavel. A preferencia fica salva neste navegador.</p>
+                <div id="font-size-controls" class="segmented-control" role="group" aria-label="Escolher tamanho da fonte">
+                    <button type="button" class="segment-button is-active" data-font-size="default" aria-pressed="true">Padrao</button>
+                    <button type="button" class="segment-button" data-font-size="medium" aria-pressed="false">Maior</button>
+                    <button type="button" class="segment-button" data-font-size="large" aria-pressed="false">Maxima</button>
+                </div>
+            </div>
+        </section>
 
         <section class="panel settings-panel-card">
             <div class="panel-header">

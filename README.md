@@ -44,6 +44,7 @@ Foi criada uma aplicação PWA local em HTML, CSS, JavaScript e jQuery, com pers
 - Prévia dinâmica de área e custo durante o preenchimento da peça.
 - Listagem em cards no mobile para materiais e peças, mantendo tabela no desktop.
 - Tabs compactas e fixadas no mobile para facilitar a alternância entre composição e consolidado.
+- Controle de acessibilidade visual com três tamanhos de fonte, persistido no navegador para facilitar a leitura por pessoas com baixa visão.
 
 ### Estrutura criada
 

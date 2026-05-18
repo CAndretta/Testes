@@ -1,4 +1,5 @@
 :root {
+    --font-scale: 1;
     --bg: #f3efe7;
     --surface: rgba(255, 252, 247, 0.92);
     --surface-strong: #fffdfa;
@@ -14,6 +15,14 @@
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+body[data-font-size="medium"] {
+    --font-scale: 1.12;
+}
+
+body[data-font-size="large"] {
+    --font-scale: 1.26;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -25,6 +34,7 @@
 body {
     margin: 0;
     min-height: 100vh;
+    font-size: calc(1rem * var(--font-scale));
     line-height: 1.45;
     color: var(--text);
     background:
@@ -79,6 +89,57 @@ select {
     margin: 0;
     color: var(--muted);
     font-size: 0.98rem;
+}
+
+.accessibility-toolbar {
+    display: grid;
+    gap: 8px;
+}
+
+.accessibility-label,
+.accessibility-copy {
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.accessibility-label {
+    font-weight: 700;
+}
+
+.accessibility-copy {
+    margin: 0;
+}
+
+.accessibility-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.segmented-control {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.segment-button {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: rgba(255, 252, 247, 0.82);
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.segment-button:hover {
+    transform: translateY(-1px);
+}
+
+.segment-button.is-active {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    border-color: transparent;
+    color: #fff;
 }
 
 .hero-actions {
@@ -652,6 +713,9 @@ thead th {
     right: 0;
     width: min(520px, 100vw);
     height: 100vh;
+    display: grid;
+    align-content: start;
+    gap: 16px;
     padding: 24px;
     background: linear-gradient(180deg, rgba(252, 250, 247, 0.98) 0%, rgba(243, 239, 231, 0.98) 100%);
     box-shadow: -24px 0 60px rgba(18, 37, 61, 0.2);
@@ -846,7 +910,6 @@ thead th {
         display: grid;
     }
 
-    .inline-support,
     .confirm-actions {
         flex-direction: column;
         align-items: stretch;
@@ -882,6 +945,16 @@ thead th {
     .form-actions {
         display: grid;
         grid-template-columns: 1fr;
+    }
+
+    .segmented-control {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .segment-button {
+        text-align: center;
+        padding-inline: 10px;
     }
 
     .project-picker-panel {

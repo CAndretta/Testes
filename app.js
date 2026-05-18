@@ -5,6 +5,8 @@
     const SETTINGS_PANEL_OPEN_CLASS = "is-open";
     const LOCAL_PROTOCOL = "file:";
     const TOAST_DURATION_MS = 3200;
+    const DEFAULT_FONT_SIZE = "default";
+    const ALLOWED_FONT_SIZES = ["default", "medium", "large"];
 
     const state = loadState();
     const uiState = {
@@ -20,7 +22,7 @@
     });
 
     function loadState() {
-        const fallback = { projects: [], materials: [], selectedProjectId: "" };
+        const fallback = { projects: [], materials: [], selectedProjectId: "", fontSize: DEFAULT_FONT_SIZE };
         const rawState = window.localStorage.getItem(STORAGE_KEY);
 
         if (!rawState) {
@@ -38,7 +40,8 @@
                 return {
                     projects,
                     materials,
-                    selectedProjectId
+                    selectedProjectId,
+                    fontSize: normalizeFontSize(parsed.fontSize)
                 };
             }
 
@@ -52,14 +55,16 @@
                         name: "Projeto migrado",
                         pieces: Array.isArray(parsed.pieces) ? parsed.pieces.map(normalizePiece).filter(Boolean) : []
                     }],
-                    selectedProjectId: migratedProjectId
+                    selectedProjectId: migratedProjectId,
+                    fontSize: DEFAULT_FONT_SIZE
                 };
             }
 
             return {
                 projects: [],
                 materials: [],
-                selectedProjectId: ""
+                selectedProjectId: "",
+                fontSize: DEFAULT_FONT_SIZE
             };
         } catch (error) {
             console.warn("Nao foi possivel carregar o estado salvo.", error);
@@ -77,7 +82,8 @@
         $("#delete-project").on("click", handleDeleteProject);
         $("#toggle-project-picker").on("click", toggleProjectPicker);
         $("#hero-start-action").on("click", handleHeroStartAction);
-        $("#hero-material-action, #quick-add-material").on("click", openCostSettings);
+        $("#hero-material-action").on("click", openCostSettings);
+        $("#font-size-controls").on("click", ".segment-button", handleFontSizeChange);
         $("#material-form").on("submit", handleMaterialSubmit);
         $("#piece-form").on("submit", handlePieceSubmit);
         $("#materials-table-body, #materials-mobile-list").on("click", ".delete-material", handleDeleteMaterial);
@@ -94,8 +100,29 @@
     }
 
     function handleHeroStartAction() {
+        if (!state.materials.length) {
+            showToast("Cadastre ao menos um material antes de iniciar um projeto.", "warning");
+            openCostSettings();
+            return;
+        }
+
         openProjectPicker();
         scrollToElement("#project-heading");
+    }
+
+    function handleFontSizeChange(event) {
+        const requestedSize = $(event.currentTarget).data("font-size");
+        const fontSize = normalizeFontSize(requestedSize);
+
+        if (fontSize === state.fontSize) {
+            return;
+        }
+
+        state.fontSize = fontSize;
+        persistState();
+        applyFontSize();
+        renderFontSizeControls();
+        showToast("Tamanho da fonte atualizado.", "success");
     }
 
     function openCostSettings() {
@@ -148,6 +175,12 @@
     function handleProjectSubmit(event) {
         event.preventDefault();
 
+        if (!state.materials.length) {
+            showToast("Cadastre ao menos um material antes de criar um projeto.", "warning");
+            openCostSettings();
+            return;
+        }
+
         const name = $("#project-name").val().trim();
 
         if (!name) {
@@ -174,6 +207,13 @@
     }
 
     function handleProjectChange(event) {
+        if (!state.materials.length) {
+            $(event.currentTarget).val("");
+            showToast("Cadastre ao menos um material antes de abrir um projeto.", "warning");
+            openCostSettings();
+            return;
+        }
+
         state.selectedProjectId = $(event.currentTarget).val();
 
         if (state.selectedProjectId) {
@@ -372,6 +412,8 @@
     }
 
     function renderAll() {
+        applyFontSize();
+        renderFontSizeControls();
         renderRuntimeNotice();
         renderTabs();
         renderJourneySteps();
@@ -730,6 +772,22 @@
         };
     }
 
+    function applyFontSize() {
+        $("body").attr("data-font-size", normalizeFontSize(state.fontSize));
+    }
+
+    function renderFontSizeControls() {
+        const currentFontSize = normalizeFontSize(state.fontSize);
+
+        $("#font-size-controls .segment-button").each(function () {
+            const button = $(this);
+            const isActive = button.data("font-size") === currentFontSize;
+
+            button.toggleClass("is-active", isActive);
+            button.attr("aria-pressed", String(isActive));
+        });
+    }
+
     function renderJourneySteps() {
         const activeTab = getActiveTab();
         const hasProject = Boolean(getSelectedProject());
@@ -944,23 +1002,29 @@
     function renderProjectContext() {
         const project = getSelectedProject();
         const hasProject = Boolean(project);
+        const hasMaterials = state.materials.length > 0;
         const projectName = hasProject ? project.name : "Nenhum projeto selecionado";
         const shouldShowPicker = uiState.projectPickerOpen;
 
         $("#project-heading").text(hasProject ? "Projeto em andamento" : "Abra um projeto antes de cadastrar");
-        $("#project-helper").text(hasProject ? 'Projeto ativo: ' + project.name + '. Use o botao acima para trocar de contexto sem misturar o preenchimento atual.' : "Selecione um projeto existente ou crie um novo para liberar o preenchimento das pecas e do consolidado.");
+        $("#project-helper").text(hasProject ? 'Projeto ativo: ' + project.name + '. Use o botao acima para trocar de contexto sem misturar o preenchimento atual.' : hasMaterials ? "Selecione um projeto existente ou crie um novo para liberar o preenchimento das pecas e do consolidado." : "Cadastre primeiro ao menos um material na area de Configuracoes para liberar o fluxo de projetos.");
         $("#toggle-project-picker")
             .text(hasProject ? "Trocar ou criar outro projeto" : "Selecionar ou criar projeto")
             .attr("aria-expanded", String(shouldShowPicker));
-        $("#hero-start-action").text(hasProject ? "Trocar projeto" : "Comecar projeto");
-        $("#hero-material-action").text(state.materials.length ? "Editar base de custos" : "Base de custos");
-        $("#project-picker-panel").prop("hidden", !shouldShowPicker);
+        $("#hero-start-action").text(hasProject ? "Trocar projeto" : hasMaterials ? "Comecar projeto" : "Cadastrar materiais");
+        $("#hero-material-action").text("Configuracoes");
+        $("#project-picker-panel").prop("hidden", !shouldShowPicker || !hasMaterials);
         $("#project-workspace").prop("hidden", !hasProject);
         $("#material-form :input").prop("disabled", false);
         $("#piece-form :input").not("#piece-material").prop("disabled", !hasProject);
         $("#piece-material").prop("disabled", !hasProject || state.materials.length === 0);
         $("#clear-data").prop("disabled", !hasProject);
-        $("#quick-add-material").prop("disabled", false);
+        $("#toggle-project-picker").prop("disabled", !hasMaterials);
+        $("#project-select, #project-name, #project-form button[type='submit']").prop("disabled", !hasMaterials);
+
+        $("#project-material-warning")
+            .prop("hidden", hasMaterials)
+            .text(hasMaterials ? "" : "Cadastre ao menos um material em Configuracoes antes de criar ou selecionar um projeto.");
 
         ["#piece-project-badge", "#summary-project-badge"].forEach(function (selector) {
             $(selector)
@@ -978,6 +1042,12 @@
     }
 
     function toggleProjectPicker() {
+        if (!state.materials.length) {
+            showToast("Cadastre ao menos um material antes de iniciar um projeto.", "warning");
+            openCostSettings();
+            return;
+        }
+
         uiState.projectPickerOpen = !uiState.projectPickerOpen;
 
         if (uiState.projectPickerOpen) {
@@ -989,6 +1059,12 @@
     }
 
     function openProjectPicker() {
+        if (!state.materials.length) {
+            uiState.projectPickerOpen = false;
+            renderProjectContext();
+            return;
+        }
+
         uiState.projectPickerOpen = true;
         renderProjectContext();
         window.setTimeout(function () {
@@ -1044,6 +1120,10 @@
                 $(this).remove();
             });
         }, TOAST_DURATION_MS);
+    }
+
+    function normalizeFontSize(value) {
+        return ALLOWED_FONT_SIZES.indexOf(value) >= 0 ? value : DEFAULT_FONT_SIZE;
     }
 
     function requestConfirmation(options) {
